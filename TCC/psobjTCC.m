@@ -27,15 +27,15 @@ scalefactor = size(I,2)/size(eigenfunction(:, :, 1),2);
 
 xindex=find(xmask);
 
-for(j = 1:find(x,2))
-    for i=1:orderKernel
-        %     eigfun = padarray(eigenfunction(:, :, i), [ padsize, padsize]);
-        eigfun = imresize(eigenfunction(:, :, i, xindex(1,j)), scalefactor);
-        aerial=objectspectrum.*eigfun;%eigenfunction(:, :, i, j);
-        
-        FTaerial=fftshift(fft2(ifftshift(aerial)));
-        I=I+x(j)*eigenvalue(i, xindex(1,j)).^2*abs(FTaerial).^2;
-    end
+for j=xindex
+for i=1:orderKernel
+    %     eigfun = padarray(eigenfunction(:, :, i), [ padsize, padsize]);
+    eigfun = imresize(eigenfunction(:, :, i, j), scalefactor);
+    aerial=objectspectrum.*eigfun;%eigenfunction(:, :, i, j);
+
+    FTaerial=fftshift(fft2(ifftshift(aerial)));
+    I=I+x(j)*eigenvalue(i, xindex(1,j)).^2*abs(FTaerial).^2;
+end
 end
 
 

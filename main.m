@@ -21,13 +21,13 @@ close all
 root_path = 'C:\Users\Bene\Dropbox\Dokumente\OpticalDesign\Beamerscope\MATLAB\';
 
 % MAC
-root_path = '/Users/Bene/Dropbox/Dokumente/OpticalDesign/Beamerscope/MATLAB/';
+root_path = '/Users/Bene/Dropbox/Dokumente/Promotion/PROJECTS/Beamerscope/MATLAB/';
 
 % add path of all libraries used in this process (optimization Toolbox from
 % MATLAB is required!
-addpath(genpath(strcat(root_path, 'ILLOPT_MATLABANDROID')))
+addpath(genpath(strcat(root_path, 'Beamerscope_MATLAB')))
 addpath(genpath(root_path))
-cd(strcat(root_path, 'ILLOPT_MATLABANDROID'))
+cd([root_path, 'Beamerscope_MATLAB'])
 
 
 
@@ -39,7 +39,7 @@ NAo = 0.25;             % aperture of microscopes objective
 NAc = 0.5;              % maximum condenser aperture
 
 pixel_eff = 0.6;        % representing effective pixelsize of the camera
-pixel_n = 61;           % number of simulated pixel
+pixel_n = 64;           % number of simulated pixel
 
 n_immers = 1.00;        % refractive index immmersion medium (air)
 n_obj = 1.20;           % refractive index object
@@ -145,8 +145,8 @@ clear obj_complx_2d
 % the files in PreProcessedDataNN_filtered.mat are processed in
 % 'preprocess_inputdata.m'
 cd('./resultOptNN/')    % this can be any image source (in our case free online databases of cell-images)
-load('PreProcessedDataNN_filtered.mat');
-nFiles = size(complxObject_filtered, 3);
+load('PreProcessedDataNN.mat');
+nFiles = size(complxObject, 3);
 
 % take care, that all files have the same size
 index = 1;
@@ -157,12 +157,17 @@ obj_complx_1d = zeros(nFiles*12, newsize*newsize*2);
 x_opt1D = zeros(nFiles*12, 48);
 
 
+
+return
+
+save('tf_illoptdata', 'eigenvalue', 'eigenfunction', 'ill_method', 'OPTparams', '-v7.3')
+
 %% process all images and find its appropriate light source-shape
-for iImages=(1:nFiles)
+for iImages=(11:nFiles)
     
     % load individual image
     disp( [num2str(iImages), '/', num2str(nFiles)] )
-    object = complxObject_filtered(:,:,iImages);
+    object = complxObject(:,:,iImages);
     
     %% important for intensities of segments; values between 0..1
     %% optimize illumination source for the android cellphone
@@ -188,7 +193,7 @@ for iImages=(1:nFiles)
     % illumination source needs to be rotated by the same angle (attantion:
     % this is only possible with the segmented illumination source!)
     
-    for iAngles = 0:11
+    for iAngles = 0:1%1
         
         
         % rotate optimized pattern as well and bring back into 1D-vector
@@ -247,13 +252,25 @@ for iImages=(1:nFiles)
             obj_complx_1d(index, :) = [obj_real_1d obj_imag_1d];
         end
         
+        %% for debugging: visualize Lightsource
+        IOparams.Zcoefficient = x_opt1D(index,:);
+        
+        AERIALsys=tcc(xsim,zsim);
+        AERIALsys.computesys(IOparams.sourceshape, IOparams);
+        figure
+        subplot(121)
+        imagesc(AERIALsys.Ic), colormap gray, axis square, colorbar
+        subplot(122)
+        imagesc(angle(object)), colormap gray, axis square, colorbar
+        drawnow
+        
         
         if(false)
             %% generate illumination source for debugging with optimized pattern
             IOparams.Zcoefficient = x_opt1D(index,:);
             AERIALsys=tcc(xsim,zsim);
             AERIALsys.computesys(IOparams.sourceshape, IOparams);
-            imwrite(AERIALsys.Ic, strcat(currentfilename, num2str(iAngles), '.jpg'));
+            %imwrite(AERIALsys.Ic, strcat(currentfilename, num2str(iAngles), '.jpg'));
             
             % Calculate TCC by stacking the pupil overlaps in a 2D NxM^2 Matrix
             [TCC2D] = calculateTCC(AERIALsys);
@@ -268,7 +285,7 @@ for iImages=(1:nFiles)
             IOparams.Zcoefficient = x0;
             AERIALsys=tcc(xsim,zsim);
             AERIALsys.computesys(IOparams.sourceshape, IOparams);
-            imwrite(AERIALsys.Ic, strcat(currentfilename, num2str(iAngles), '_init.jpg'));
+            %imwrite(AERIALsys.Ic, strcat(currentfilename, num2str(iAngles), '_init.jpg'));
             
             % Calculate TCC by stacking the pupil overlaps in a 2D NxM^2 Matrix
             [TCC2D] = calculateTCC(AERIALsys);
